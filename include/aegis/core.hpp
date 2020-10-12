@@ -25,7 +25,8 @@
 
 #include "aegis/utility.hpp"
 #include "aegis/snowflake.hpp"
-#include "aegis/futures.hpp"
+#include "lsw/future_mod.h"
+//#include "aegis/futures.hpp"
 //#include "aegis/ratelimit/ratelimit.hpp"
 //#include "aegis/ratelimit/bucket.hpp"
 #include "aegis/rest/rest_controller.hpp"
@@ -269,9 +270,9 @@ public:
      * 
      * @param roles vector of roles to create
      * @param channels vector of channels to create
-     * @returns aegis::future<gateway::objects::guild>
+     * @returns LSW::v5::Tools::Future<gateway::objects::guild>
      */
-    AEGIS_DECL aegis::future<gateway::objects::guild> create_guild(
+    AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::guild> create_guild(
         std::string name, lib::optional<std::string> voice_region = {}, lib::optional<int> verification_level = {},
         lib::optional<int> default_message_notifications = {}, lib::optional<int> explicit_content_filter = {},
         lib::optional<std::string> icon = {}, lib::optional<std::vector<gateway::objects::role>> roles = {},
@@ -284,23 +285,23 @@ public:
     /**
      * @see aegis::create_guild_t
      * @param obj Struct of the contents of the request
-     * @returns aegis::future<gateway::objects::guild>
+     * @returns LSW::v5::Tools::Future<gateway::objects::guild>
      */
-    AEGIS_DECL aegis::future<gateway::objects::guild> create_guild(create_guild_t obj);
+    AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::guild> create_guild(create_guild_t obj);
 
     /// Changes bot's username (not implemented yet. username can be changed in developer panel)
     /**
      * @param username String of the username to set
-     * @returns aegis::future<gateway::objects::member>
+     * @returns LSW::v5::Tools::Future<gateway::objects::member>
      */
-    AEGIS_DECL aegis::future<gateway::objects::member> modify_bot_username(const std::string & username);
+    AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::member> modify_bot_username(const std::string & username);
 
     /// Changes bot's avatar (not implemented yet. avatar can be changed in developer panel)
     /**
      * @param avatar String of the avatar to set
-     * @returns aegis::future<gateway::objects::member>
+     * @returns LSW::v5::Tools::Future<gateway::objects::member>
      */
-    AEGIS_DECL aegis::future<gateway::objects::member> modify_bot_avatar(const std::string & avatar);
+    AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::member> modify_bot_avatar(const std::string & avatar);
 
     /// Starts the shard manager, creates the shards, and connects to the gateway
     AEGIS_DECL void run();
@@ -482,17 +483,17 @@ public:
      * @param id Snowflake of member to message
      * @param content string of message to send
      * @param nonce Unique id to track when message verifies (can be omitted)
-     * @returns aegis::future<gateway::objects::message>
+     * @returns LSW::v5::Tools::Future<gateway::objects::message>
      */
-    AEGIS_DECL aegis::future<gateway::objects::message> create_dm_message(snowflake member_id, const std::string & content, int64_t nonce = 0);
+    AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::message> create_dm_message(snowflake member_id, const std::string & content, int64_t nonce = 0);
 
     /// Send a direct message to a user
     /**
      * @see aegis::create_message_t
      * @param obj Struct of the contents of the request
-     * @returns aegis::future<gateway::objects::message>
+     * @returns LSW::v5::Tools::Future<gateway::objects::message>
      */
-    AEGIS_DECL aegis::future<gateway::objects::message> create_dm_message(const create_message_t & obj);
+    AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::message> create_dm_message(const create_message_t & obj);
 
     /// Return bot uptime as {days hours minutes seconds}
     /**
@@ -826,19 +827,19 @@ public:
      */
     AEGIS_DECL void reduce_threads(std::size_t count) noexcept;
 
-    AEGIS_DECL aegis::future<gateway::objects::message> create_message(snowflake channel_id, const std::string& msg, int64_t nonce = 0, bool perform_lookup = false) noexcept;
+    AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::message> create_message(snowflake channel_id, const std::string& msg, int64_t nonce = 0, bool perform_lookup = false);
 
-    AEGIS_DECL aegis::future<gateway::objects::message> create_message_embed(snowflake channel_id, const std::string& msg, const json& _obj, int64_t nonce = 0, bool perform_lookup = false) noexcept;
+    AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::message> create_message_embed(snowflake channel_id, const std::string& msg, const json& _obj, int64_t nonce = 0, bool perform_lookup = false);
 
     /// Run async task
     /**
      * This function will queue your task (a lambda or std::function) within Asio for execution at a later time
-     * This version will return an aegis::future of your type that the passed function returns that you may
+     * This version will return an LSW::v5::Tools::Future of your type that the passed function returns that you may
      * chain a continuation onto and receive that value within in
      *
      * Example:
      * @code{.cpp}
-     * aegis::future<std::string> message = async([]{
+     * LSW::v5::Tools::Future<std::string> message = async([]{
      *     return 5;
      * }).then([](int value){
      *     return std::string("result received");
@@ -846,12 +847,22 @@ public:
      * @endcode
      *
      * @param f Function to run async
-     * @returns aegis::future<V>
+     * @returns LSW::v5::Tools::Future<V>
      */
     template<typename T, typename V = std::result_of_t<T()>, typename = std::enable_if_t<!std::is_void<V>::value>>
-    aegis::future<V> async(T f) noexcept
+    LSW::v5::Tools::Future<V> async(T f) noexcept
     {
         std::atomic_thread_fence(std::memory_order_acquire);
+        LSW::v5::Tools::Promise<V> mpr(f);
+        LSW::v5::Tools::Future<V> fut = mpr.get_future();
+
+        asio::post(*_io_context, [mpr = std::move(mpr)]() mutable
+        {
+            mpr.work();
+        });
+        std::atomic_thread_fence(std::memory_order_release);
+        return std::move(fut);
+        /*std::atomic_thread_fence(std::memory_order_acquire);
         aegis::promise<V> pr(_io_context.get(), &_global_m);
         auto fut = pr.get_future();
 
@@ -867,17 +878,17 @@ public:
             }
         });
         std::atomic_thread_fence(std::memory_order_release);
-        return fut;
+        return fut;*/
     }
 
     /// Run async task
     /**
      * This function will queue your task (a lambda or std::function) within Asio for execution at a later time
-     * This version will return an aegis::future<void> that will still allow chaining continuations on
+     * This version will return an LSW::v5::Tools::Future<void> that will still allow chaining continuations on
      *
      * Example:
      * @code{.cpp}
-     * aegis::future<std::string> message = async([]{
+     * LSW::v5::Tools::Future<std::string> message = async([]{
      *     return;
      * }).then([](){
      *     return std::string("continuation executed");
@@ -885,12 +896,22 @@ public:
      * @endcode
      *
      * @param f Function to run async
-     * @returns aegis::future<V>
+     * @returns LSW::v5::Tools::Future<V>
      */
     template<typename T, typename V = std::enable_if_t<std::is_void<std::result_of_t<T()>>::value>>
-    aegis::future<V> async(T f) noexcept
+    LSW::v5::Tools::Future<V> async(T f) noexcept
     {
         std::atomic_thread_fence(std::memory_order_acquire);
+        LSW::v5::Tools::Promise<V> mpr(f);
+        LSW::v5::Tools::Future<V> fut = mpr.get_future();
+
+        asio::post(*_io_context, [mpr = std::move(mpr)]() mutable
+        {
+            mpr.work();
+        });
+        std::atomic_thread_fence(std::memory_order_release);
+        return std::move(fut);
+        /*std::atomic_thread_fence(std::memory_order_acquire);
         aegis::promise<V> pr(_io_context.get(), &_global_m);
         auto fut = pr.get_future();
 
@@ -907,7 +928,7 @@ public:
             }
         });
         std::atomic_thread_fence(std::memory_order_release);
-        return fut;
+        return fut;*/
     }
 
     /// Get the internal guild mutex
@@ -1152,7 +1173,7 @@ private:
     std::shared_ptr<asio::io_context> _io_context = nullptr;
     work_ptr wrk = nullptr;
     std::condition_variable cv;
-    std::chrono::hours _tz_bias = 0h;
+    std::chrono::hours _tz_bias = std::chrono::hours(0); // my VS didn't like 'h'
 public:
     std::vector<std::unique_ptr<thread_state>> threads;
     std::recursive_mutex _global_m;

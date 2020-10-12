@@ -13,7 +13,8 @@
 #include "aegis/rest/rest_controller.hpp"
 #include "aegis/snowflake.hpp"
 #include "aegis/ratelimit/bucket.hpp"
-#include "aegis/futures.hpp"
+#include "lsw/future_mod.h"
+//#include "aegis/futures.hpp"
 #include "aegis/core.hpp"
 
 #include <chrono>
@@ -85,7 +86,7 @@ public:
     }
 
     template<typename ResultType, typename V = std::enable_if_t<!std::is_same<ResultType, rest::rest_reply>::value>>
-    aegis::future<ResultType> post_task(rest::request_params params) noexcept
+    LSW::v5::Tools::Future<ResultType> post_task(rest::request_params params) noexcept
     {
         return _bot->async([=]() -> ResultType
         {
@@ -97,7 +98,7 @@ public:
         });
     }
 
-    aegis::future<rest::rest_reply> post_task(rest::request_params params) noexcept
+    LSW::v5::Tools::Future<rest::rest_reply> post_task(rest::request_params params) noexcept
     {
         return _bot->async([=]() -> rest::rest_reply
         {
@@ -107,7 +108,7 @@ public:
     }
 
     template<typename ResultType, typename V = std::enable_if_t<!std::is_same<ResultType, rest::rest_reply>::value>>
-    aegis::future<ResultType> post_task(std::string _bucket, rest::request_params params) noexcept
+    LSW::v5::Tools::Future<ResultType> post_task(std::string _bucket, rest::request_params params) noexcept
     {
         return _bot->async([=]() -> ResultType
         {
@@ -119,7 +120,7 @@ public:
         });
     }
 
-    aegis::future<rest::rest_reply> post_task(std::string _bucket, rest::request_params params) noexcept
+    LSW::v5::Tools::Future<rest::rest_reply> post_task(std::string _bucket, rest::request_params params) noexcept
     {
         return _bot->async([=]() -> rest::rest_reply
         {

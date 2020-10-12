@@ -578,19 +578,19 @@ AEGIS_DECL channel * guild::get_channel(snowflake id) const noexcept
 
 /**\todo Incomplete. Signature may change. Location may change.
  */
-AEGIS_DECL aegis::future<gateway::objects::guild> guild::get_guild()
+AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::guild> guild::get_guild()
 {
     std::shared_lock<shared_mutex> l(_m);
     return _bot->get_ratelimit().post_task<gateway::objects::guild>({ fmt::format("/guilds/{}", guild_id), rest::Get });
 }
 
-AEGIS_DECL aegis::future<gateway::objects::guild> guild::modify_guild(lib::optional<std::string> name, lib::optional<std::string> voice_region, lib::optional<int> verification_level,
+AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::guild> guild::modify_guild(lib::optional<std::string> name, lib::optional<std::string> voice_region, lib::optional<int> verification_level,
                     lib::optional<int> default_message_notifications, lib::optional<int> explicit_content_filter, lib::optional<snowflake> afk_channel_id, lib::optional<int> afk_timeout,
                     lib::optional<std::string> icon, lib::optional<snowflake> owner_id, lib::optional<std::string> splash)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if ((!perms().can_manage_guild()) || (owner_id.has_value() && owner_id != self()->_member_id))
-        return aegis::make_exception_future<gateway::objects::guild>(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future<gateway::objects::guild>(error::no_permission);
 #endif
 
     std::shared_lock<shared_mutex> l(_m);
@@ -620,12 +620,12 @@ AEGIS_DECL aegis::future<gateway::objects::guild> guild::modify_guild(lib::optio
     return _bot->get_ratelimit().post_task<gateway::objects::guild>({ fmt::format("/guilds/{}", guild_id), rest::Patch, obj.dump() });
 }
 
-AEGIS_DECL aegis::future<rest::rest_reply> guild::delete_guild()
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> guild::delete_guild()
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     //requires OWNER
     if (owner_id != self()->_member_id)
-        return aegis::make_exception_future(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future(error::no_permission);
 #endif
 
     std::shared_lock<shared_mutex> l(_m);
@@ -633,13 +633,13 @@ AEGIS_DECL aegis::future<rest::rest_reply> guild::delete_guild()
     return _bot->get_ratelimit().post_task({ fmt::format("/guilds/{}", guild_id), rest::Delete });
 }
 
-AEGIS_DECL aegis::future<gateway::objects::channel> guild::create_text_channel(const std::string & name,
+AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::channel> guild::create_text_channel(const std::string & name,
                 int64_t parent_id, bool nsfw, const std::vector<gateway::objects::permission_overwrite> & permission_overwrites)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     //requires MANAGE_CHANNELS
     if (!perms().can_manage_channels())
-        return aegis::make_exception_future<gateway::objects::channel>(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future<gateway::objects::channel>(error::no_permission);
 #endif
 
     std::shared_lock<shared_mutex> l(_m);
@@ -660,7 +660,7 @@ AEGIS_DECL aegis::future<gateway::objects::channel> guild::create_text_channel(c
     }
 
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
-    return _bot->get_ratelimit().post_task<gateway::objects::channel>({ fmt::format("/guilds/{}/channels", guild_id), rest::Post, obj.dump() }).then([&](gateway::objects::channel _ch)
+    return _bot->get_ratelimit().post_task<gateway::objects::channel>({ fmt::format("/guilds/{}/channels", guild_id), rest::Post, obj.dump() }).then<aegis::gateway::objects::channel>([&](gateway::objects::channel _ch)
     {
         channel * _t_ch = this->get_bot().channel_create(_ch.channel_id);
         _t_ch->guild_id = _ch.guild_id;
@@ -678,13 +678,13 @@ AEGIS_DECL aegis::future<gateway::objects::channel> guild::create_text_channel(c
 #endif
 }
 
-AEGIS_DECL aegis::future<gateway::objects::channel> guild::create_voice_channel(const std::string & name,
+AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::channel> guild::create_voice_channel(const std::string & name,
                 int32_t bitrate, int32_t user_limit, int64_t parent_id,
                 const std::vector<gateway::objects::permission_overwrite> & permission_overwrites)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_manage_channels())
-        return aegis::make_exception_future<gateway::objects::channel>(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future<gateway::objects::channel>(error::no_permission);
 #endif
 
     std::shared_lock<shared_mutex> l(_m);
@@ -705,7 +705,7 @@ AEGIS_DECL aegis::future<gateway::objects::channel> guild::create_voice_channel(
     }
 
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
-    return _bot->get_ratelimit().post_task<gateway::objects::channel>({ fmt::format("/guilds/{}/channels", guild_id), rest::Post, obj.dump() }).then([&](gateway::objects::channel _ch)
+    return _bot->get_ratelimit().post_task<gateway::objects::channel>({ fmt::format("/guilds/{}/channels", guild_id), rest::Post, obj.dump() }).then<aegis::gateway::objects::channel>([&](gateway::objects::channel _ch)
     {
         channel * _t_ch = this->get_bot().channel_create(_ch.channel_id);
         _t_ch->guild_id = _ch.guild_id;
@@ -723,12 +723,12 @@ AEGIS_DECL aegis::future<gateway::objects::channel> guild::create_voice_channel(
 #endif
 }
 
-AEGIS_DECL aegis::future<gateway::objects::channel> guild::create_category_channel(const std::string & name,
+AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::channel> guild::create_category_channel(const std::string & name,
                 int64_t parent_id, const std::vector<gateway::objects::permission_overwrite> & permission_overwrites)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_manage_channels())
-        return aegis::make_exception_future<gateway::objects::channel>(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future<gateway::objects::channel>(error::no_permission);
 #endif
 
     std::shared_lock<shared_mutex> l(_m);
@@ -743,7 +743,7 @@ AEGIS_DECL aegis::future<gateway::objects::channel> guild::create_category_chann
     }
 
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
-    return _bot->get_ratelimit().post_task<gateway::objects::channel>({ fmt::format("/guilds/{}/channels", guild_id), rest::Post, obj.dump() }).then([&](gateway::objects::channel _ch)
+    return _bot->get_ratelimit().post_task<gateway::objects::channel>({ fmt::format("/guilds/{}/channels", guild_id), rest::Post, obj.dump() }).then<aegis::gateway::objects::channel>([&](gateway::objects::channel _ch)
     {
         channel * _t_ch = this->get_bot().channel_create(_ch.channel_id);
         _t_ch->guild_id = _ch.guild_id;
@@ -761,17 +761,17 @@ AEGIS_DECL aegis::future<gateway::objects::channel> guild::create_category_chann
 
 /**\todo Incomplete. Signature may change
  */
-AEGIS_DECL aegis::future<rest::rest_reply> guild::modify_channel_positions()
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> guild::modify_channel_positions()
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_manage_channels())
-        return aegis::make_exception_future(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future(error::no_permission);
 #endif
 
-    return aegis::make_exception_future(error::not_implemented);
+    throw aegis::exception(make_error_code(error::not_implemented));//return aegis::make_exception_future(error::not_implemented);
 }
 
-AEGIS_DECL aegis::future<gateway::objects::member> guild::modify_guild_member(snowflake user_id, lib::optional<std::string> nick, lib::optional<bool> mute,
+AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::member> guild::modify_guild_member(snowflake user_id, lib::optional<std::string> nick, lib::optional<bool> mute,
                             lib::optional<bool> deaf, lib::optional<std::vector<snowflake>> roles, lib::optional<snowflake> channel_id)
 {
     json obj;
@@ -780,32 +780,32 @@ AEGIS_DECL aegis::future<gateway::objects::member> guild::modify_guild_member(sn
     if (nick.has_value())
     {
         if (!perm.can_manage_names())
-            return aegis::make_exception_future<gateway::objects::member>(error::no_permission);
+            throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future<gateway::objects::member>(error::no_permission);
         obj["nick"] = nick.value();//requires MANAGE_NICKNAMES
     }
     if (mute.has_value())
     {
         if (!perm.can_voice_mute())
-            return aegis::make_exception_future<gateway::objects::member>(error::no_permission);
+            throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future<gateway::objects::member>(error::no_permission);
         obj["mute"] = mute.value();//requires MUTE_MEMBERS
     }
     if (deaf.has_value())
     {
         if (!perm.can_voice_deafen())
-            return aegis::make_exception_future<gateway::objects::member>(error::no_permission);
+            throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future<gateway::objects::member>(error::no_permission);
         obj["deaf"] = deaf.value();//requires DEAFEN_MEMBERS
     }
     if (roles.has_value())
     {
         if (!perm.can_manage_roles())
-            return aegis::make_exception_future<gateway::objects::member>(error::no_permission);
+            throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future<gateway::objects::member>(error::no_permission);
         obj["roles"] = roles.value();//requires MANAGE_ROLES
     }
     if (channel_id.has_value())
     {
         //TODO: This needs to calculate whether or not the bot has access to the voice channel as well
         if (!perm.can_voice_move())
-            return aegis::make_exception_future<gateway::objects::member>(error::no_permission);
+            throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future<gateway::objects::member>(error::no_permission);
         obj["channel_id"] = channel_id.value();//requires MOVE_MEMBERS
     }
 #else
@@ -826,11 +826,11 @@ AEGIS_DECL aegis::future<gateway::objects::member> guild::modify_guild_member(sn
     return _bot->get_ratelimit().post_task<gateway::objects::member>({ fmt::format("/guilds/{}/members/{}", guild_id, user_id), rest::Patch, obj.dump() });
 }
 
-AEGIS_DECL aegis::future<rest::rest_reply> guild::modify_my_nick(const std::string & newname)
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> guild::modify_my_nick(const std::string & newname)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_change_name())
-        return aegis::make_exception_future(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future(error::no_permission);
 #endif
 
     std::shared_lock<shared_mutex> l(_m);
@@ -839,11 +839,11 @@ AEGIS_DECL aegis::future<rest::rest_reply> guild::modify_my_nick(const std::stri
     return _bot->get_ratelimit().post_task({ fmt::format("/guilds/{}/members/@me/nick", guild_id), rest::Patch, obj.dump() });
 }
 
-AEGIS_DECL aegis::future<gateway::objects::role> guild::add_guild_member_role(snowflake user_id, snowflake role_id)
+AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::role> guild::add_guild_member_role(snowflake user_id, snowflake role_id)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_manage_roles())
-        return aegis::make_exception_future<gateway::objects::role>(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future<gateway::objects::role>(error::no_permission);
 #endif
 
     std::shared_lock<shared_mutex> l(_m);
@@ -851,11 +851,11 @@ AEGIS_DECL aegis::future<gateway::objects::role> guild::add_guild_member_role(sn
     return _bot->get_ratelimit().post_task<gateway::objects::role>({ fmt::format("/guilds/{}/members/{}/roles/{}", guild_id, user_id, role_id), rest::Put });
 }
 
-AEGIS_DECL aegis::future<rest::rest_reply> guild::remove_guild_member_role(snowflake user_id, snowflake role_id)
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> guild::remove_guild_member_role(snowflake user_id, snowflake role_id)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_manage_roles())
-        return aegis::make_exception_future(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future(error::no_permission);
 #endif
 
     std::shared_lock<shared_mutex> l(_m);
@@ -863,11 +863,11 @@ AEGIS_DECL aegis::future<rest::rest_reply> guild::remove_guild_member_role(snowf
     return _bot->get_ratelimit().post_task({ fmt::format("/guilds/{}/members/{}/roles/{}", guild_id, user_id, role_id), rest::Delete });
 }
 
-AEGIS_DECL aegis::future<rest::rest_reply> guild::remove_guild_member(snowflake user_id)
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> guild::remove_guild_member(snowflake user_id)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_kick())
-        return aegis::make_exception_future(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future(error::no_permission);
 #endif
 
     std::shared_lock<shared_mutex> l(_m);
@@ -875,11 +875,11 @@ AEGIS_DECL aegis::future<rest::rest_reply> guild::remove_guild_member(snowflake 
     return _bot->get_ratelimit().post_task({ fmt::format("/guilds/{}/members/{}", guild_id, user_id), rest::Delete });
 }
 
-AEGIS_DECL aegis::future<rest::rest_reply> guild::create_guild_ban(snowflake user_id, int8_t delete_message_days, const std::string & reason)
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> guild::create_guild_ban(snowflake user_id, int8_t delete_message_days, const std::string & reason)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_ban())
-        return aegis::make_exception_future(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future(error::no_permission);
 #endif
 
     std::shared_lock<shared_mutex> l(_m);
@@ -889,11 +889,11 @@ AEGIS_DECL aegis::future<rest::rest_reply> guild::create_guild_ban(snowflake use
     return _bot->get_ratelimit().post_task({ fmt::format("/guilds/{}/bans/{}", guild_id, user_id), rest::Put, obj.dump()});
 }
 
-AEGIS_DECL aegis::future<rest::rest_reply> guild::remove_guild_ban(snowflake user_id)
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> guild::remove_guild_ban(snowflake user_id)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_ban())
-        return aegis::make_exception_future(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future(error::no_permission);
 #endif
 
     std::shared_lock<shared_mutex> l(_m);
@@ -901,11 +901,11 @@ AEGIS_DECL aegis::future<rest::rest_reply> guild::remove_guild_ban(snowflake use
     return _bot->get_ratelimit().post_task({ fmt::format("/guilds/{}/bans/{}", guild_id, user_id), rest::Delete });
 }
 
-AEGIS_DECL aegis::future<gateway::objects::bans> guild::get_guild_bans()
+AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::bans> guild::get_guild_bans()
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_ban())
-        return aegis::make_exception_future<gateway::objects::bans>(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future<gateway::objects::bans>(error::no_permission);
 #endif
 
     std::shared_lock<shared_mutex> l(_m);
@@ -913,11 +913,11 @@ AEGIS_DECL aegis::future<gateway::objects::bans> guild::get_guild_bans()
     return _bot->get_ratelimit().post_task<gateway::objects::bans>({ fmt::format("/guilds/{}/bans", guild_id), rest::Get });
 }
 
-AEGIS_DECL aegis::future<gateway::objects::ban> guild::get_guild_ban(snowflake user_id)
+AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::ban> guild::get_guild_ban(snowflake user_id)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_ban())
-        return aegis::make_exception_future<gateway::objects::ban>(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future<gateway::objects::ban>(error::no_permission);
 #endif
 
     std::shared_lock<shared_mutex> l(_m);
@@ -925,11 +925,11 @@ AEGIS_DECL aegis::future<gateway::objects::ban> guild::get_guild_ban(snowflake u
     return _bot->get_ratelimit().post_task<gateway::objects::ban>({ fmt::format("/guilds/{}/bans/{}", guild_id, user_id), rest::Get });
 }
 
-AEGIS_DECL aegis::future<gateway::objects::role> guild::create_guild_role(const std::string & name, permission _perms, int32_t color, bool hoist, bool mentionable)
+AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::role> guild::create_guild_role(const std::string & name, permission _perms, int32_t color, bool hoist, bool mentionable)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_manage_roles())
-        return aegis::make_exception_future<gateway::objects::role>(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future<gateway::objects::role>(error::no_permission);
 #endif
 
     std::shared_lock<shared_mutex> l(_m);
@@ -938,11 +938,11 @@ AEGIS_DECL aegis::future<gateway::objects::role> guild::create_guild_role(const 
     return _bot->get_ratelimit().post_task<gateway::objects::role>({ fmt::format("/guilds/{}/roles", guild_id), rest::Post, obj.dump() });
 }
 
-AEGIS_DECL aegis::future<rest::rest_reply> guild::modify_guild_role_positions(snowflake role_id, int16_t position)
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> guild::modify_guild_role_positions(snowflake role_id, int16_t position)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_manage_roles())
-        return aegis::make_exception_future(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future(error::no_permission);
 #endif
 
     std::shared_lock<shared_mutex> l(_m);
@@ -951,11 +951,11 @@ AEGIS_DECL aegis::future<rest::rest_reply> guild::modify_guild_role_positions(sn
     return _bot->get_ratelimit().post_task({ fmt::format("/guilds/{}/roles", guild_id), rest::Patch, obj.dump() });
 }
 
-AEGIS_DECL aegis::future<gateway::objects::role> guild::modify_guild_role(snowflake role_id, const std::string & name, permission _perms, int32_t color, bool hoist, bool mentionable)
+AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::role> guild::modify_guild_role(snowflake role_id, const std::string & name, permission _perms, int32_t color, bool hoist, bool mentionable)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_manage_roles())
-        return aegis::make_exception_future<gateway::objects::role>(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future<gateway::objects::role>(error::no_permission);
 #endif
 
     std::shared_lock<shared_mutex> l(_m);
@@ -964,11 +964,11 @@ AEGIS_DECL aegis::future<gateway::objects::role> guild::modify_guild_role(snowfl
     return _bot->get_ratelimit().post_task<gateway::objects::role>({ fmt::format("/guilds/{}/roles/{}", guild_id, role_id), rest::Post, obj.dump() });
 }
 
-AEGIS_DECL aegis::future<rest::rest_reply> guild::delete_guild_role(snowflake role_id)
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> guild::delete_guild_role(snowflake role_id)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_manage_roles())
-        return aegis::make_exception_future(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future(error::no_permission);
 #endif
 
     std::shared_lock<shared_mutex> l(_m);
@@ -978,125 +978,125 @@ AEGIS_DECL aegis::future<rest::rest_reply> guild::delete_guild_role(snowflake ro
 
 /**\todo Incomplete. Signature may change
  */
-AEGIS_DECL aegis::future<rest::rest_reply> guild::get_guild_prune_count(int16_t days)
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> guild::get_guild_prune_count(int16_t days)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_kick())
-        return aegis::make_exception_future(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future(error::no_permission);
 #endif
 
-    return aegis::make_exception_future(error::not_implemented);
+    throw aegis::exception(make_error_code(error::not_implemented));//return aegis::make_exception_future(error::not_implemented);
 }
 
 /**\todo Incomplete. Signature may change
  */
-AEGIS_DECL aegis::future<rest::rest_reply> guild::begin_guild_prune(int16_t days)
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> guild::begin_guild_prune(int16_t days)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_kick())
-        return aegis::make_exception_future(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future(error::no_permission);
 #endif
 
-    return aegis::make_exception_future(error::not_implemented);
+    throw aegis::exception(make_error_code(error::not_implemented));//return aegis::make_exception_future(error::not_implemented);
 }
 
 /**\todo Incomplete. Signature may change
  */
-AEGIS_DECL aegis::future<rest::rest_reply> guild::get_guild_invites()
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> guild::get_guild_invites()
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_manage_guild())
-        return aegis::make_exception_future(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future(error::no_permission);
 #endif
 
-    return aegis::make_exception_future(error::not_implemented);
+    throw aegis::exception(make_error_code(error::not_implemented));//return aegis::make_exception_future(error::not_implemented);
 }
 
 /**\todo Incomplete. Signature may change
  */
-AEGIS_DECL aegis::future<rest::rest_reply> guild::get_guild_integrations()
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> guild::get_guild_integrations()
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_manage_guild())
-        return aegis::make_exception_future(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future(error::no_permission);
 #endif
 
-    return aegis::make_exception_future(error::not_implemented);
+    throw aegis::exception(make_error_code(error::not_implemented));//return aegis::make_exception_future(error::not_implemented);
 }
 
 /**\todo Incomplete. Signature may change
  */
-AEGIS_DECL aegis::future<rest::rest_reply> guild::create_guild_integration()
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> guild::create_guild_integration()
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_manage_guild())
-        return aegis::make_exception_future(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future(error::no_permission);
 #endif
 
-    return aegis::make_exception_future(error::not_implemented);
+    throw aegis::exception(make_error_code(error::not_implemented));//return aegis::make_exception_future(error::not_implemented);
 }
 
 /**\todo Incomplete. Signature may change
  */
-AEGIS_DECL aegis::future<rest::rest_reply> guild::modify_guild_integration()
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> guild::modify_guild_integration()
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_manage_guild())
-        return aegis::make_exception_future(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future(error::no_permission);
 #endif
 
-    return aegis::make_exception_future(error::not_implemented);
+    throw aegis::exception(make_error_code(error::not_implemented));//return aegis::make_exception_future(error::not_implemented);
 }
 
 /**\todo Incomplete. Signature may change
  */
-AEGIS_DECL aegis::future<rest::rest_reply> guild::delete_guild_integration()
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> guild::delete_guild_integration()
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_manage_guild())
-        return aegis::make_exception_future(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future(error::no_permission);
 #endif
 
-    return aegis::make_exception_future(error::not_implemented);
+    throw aegis::exception(make_error_code(error::not_implemented));//return aegis::make_exception_future(error::not_implemented);
 }
 
 /**\todo Incomplete. Signature may change
  */
-AEGIS_DECL aegis::future<rest::rest_reply> guild::sync_guild_integration()
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> guild::sync_guild_integration()
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_manage_guild())
-        return aegis::make_exception_future(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future(error::no_permission);
 #endif
 
-    return aegis::make_exception_future(error::not_implemented);
+    throw aegis::exception(make_error_code(error::not_implemented));//return aegis::make_exception_future(error::not_implemented);
 }
 
 /**\todo Incomplete. Signature may change
  */
-AEGIS_DECL aegis::future<rest::rest_reply> guild::get_guild_embed()
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> guild::get_guild_embed()
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_manage_guild())
-        return aegis::make_exception_future(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future(error::no_permission);
 #endif
 
-    return aegis::make_exception_future(error::not_implemented);
+    throw aegis::exception(make_error_code(error::not_implemented));//return aegis::make_exception_future(error::not_implemented);
 }
 
 /**\todo Incomplete. Signature may change
  */
-AEGIS_DECL aegis::future<rest::rest_reply> guild::modify_guild_embed()
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> guild::modify_guild_embed()
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!perms().can_manage_guild())
-        return aegis::make_exception_future(error::no_permission);
+        throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future(error::no_permission);
 #endif
 
-    return aegis::make_exception_future(error::not_implemented);
+    throw aegis::exception(make_error_code(error::not_implemented));//return aegis::make_exception_future(error::not_implemented);
 }
 
-AEGIS_DECL aegis::future<rest::rest_reply> guild::leave()
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> guild::leave()
 {
     std::unique_lock<shared_mutex> l(_m);
 

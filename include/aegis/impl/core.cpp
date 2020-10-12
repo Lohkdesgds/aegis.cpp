@@ -272,13 +272,13 @@ AEGIS_DECL user * core::user_create(snowflake id) noexcept
 }
 #endif
 
-AEGIS_DECL aegis::future<gateway::objects::message> core::create_dm_message(snowflake member_id, const std::string & content, int64_t nonce)
+AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::message> core::create_dm_message(snowflake member_id, const std::string & content, int64_t nonce)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     channel * c = nullptr;
     auto m = find_user(member_id);
     if (!m)
-        return aegis::make_exception_future<gateway::objects::message>(aegis::error::member_error);
+        throw aegis::exception(make_error_code(error::member_error));//return aegis::make_exception_future<gateway::objects::message>(aegis::error::member_error); // I have not done a way yet
     if (m->get_dm_id())
         c = channel_create(m->get_dm_id());
     if (c)
@@ -288,7 +288,7 @@ AEGIS_DECL aegis::future<gateway::objects::message> core::create_dm_message(snow
     {
         rest::request_params params{ "/users/@me/channels", rest::Post, json{{ "recipient_id", std::to_string(member_id) }}.dump() };
         return get_ratelimit().post_task<gateway::objects::channel>(params)
-            .then([=](gateway::objects::channel && reply)
+            .then<aegis::gateway::objects::message>([=](gateway::objects::channel && reply)
             {
                 auto c = channel_create(reply.id);
                 if (!c) throw aegis::exception(make_error_code(error::member_error));
@@ -300,13 +300,13 @@ AEGIS_DECL aegis::future<gateway::objects::message> core::create_dm_message(snow
     }
 }
 
-AEGIS_DECL aegis::future<gateway::objects::message> core::create_dm_message(const create_message_t & obj)
+AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::message> core::create_dm_message(const create_message_t & obj)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     channel * c = nullptr;
     auto m = find_user(obj._user_id);
     if (!m)
-        return aegis::make_exception_future<gateway::objects::message>(aegis::error::member_error);
+        throw aegis::exception(make_error_code(error::member_error));//return aegis::make_exception_future<gateway::objects::message>(aegis::error::member_error); // I have not done a way yet
     if (m->get_dm_id())
         c = channel_create(m->get_dm_id());
     if (c)
@@ -316,7 +316,7 @@ AEGIS_DECL aegis::future<gateway::objects::message> core::create_dm_message(cons
     {
         rest::request_params params{ "/users/@me/channels", rest::Post, json{{ "recipient_id", std::to_string(obj._user_id) }}.dump() };
         return get_ratelimit().post_task<gateway::objects::channel>(params)
-            .then([=](gateway::objects::channel && reply)
+            .then<aegis::gateway::objects::message>([=](gateway::objects::channel && reply)
         {
             auto c = channel_create(reply.id);
             if (!c) throw aegis::exception(make_error_code(error::member_error));
@@ -742,28 +742,28 @@ AEGIS_DECL void core::process_ready(const json & d, shards::shard * _shard)
     }
 }
 
-AEGIS_DECL aegis::future<gateway::objects::guild> core::create_guild(create_guild_t obj)
+AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::guild> core::create_guild(create_guild_t obj)
 {
     return create_guild(obj._name, obj._voice_region, obj._verification_level, obj._default_message_notifications,
                         obj._explicit_content_filter, obj._icon, obj._roles, obj._channels);
 }
 
-AEGIS_DECL aegis::future<gateway::objects::member> core::modify_bot_username(const std::string & username)
+AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::member> core::modify_bot_username(const std::string & username)
 {
     if (!username.empty())
     {
-        return make_ready_future<gateway::objects::member>();
+        return LSW::v5::Tools::fake_future<gateway::objects::member>(gateway::objects::member());//make_ready_future<gateway::objects::member>();
     }
-    return make_ready_future<gateway::objects::member>();
+    return LSW::v5::Tools::fake_future<gateway::objects::member>(gateway::objects::member());//make_ready_future<gateway::objects::member>();
 }
 
-AEGIS_DECL aegis::future<gateway::objects::member> core::modify_bot_avatar(const std::string & avatar)
+AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::member> core::modify_bot_avatar(const std::string & avatar)
 {
     if (!avatar.empty())
     {
-        return make_ready_future<gateway::objects::member>();
+        return LSW::v5::Tools::fake_future<gateway::objects::member>(gateway::objects::member());//make_ready_future<gateway::objects::member>();
     }
-    return make_ready_future<gateway::objects::member>();
+    return LSW::v5::Tools::fake_future<gateway::objects::member>(gateway::objects::member());//make_ready_future<gateway::objects::member>();
 }
 
 ///\todo
@@ -2183,7 +2183,7 @@ AEGIS_DECL void core::ws_webhooks_update(const json & result, shards::shard * _s
         i_webhooks_update(obj);
 }
 
-AEGIS_DECL aegis::future<gateway::objects::guild> core::create_guild(
+AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::guild> core::create_guild(
     std::string name, lib::optional<std::string> voice_region, lib::optional<int> verification_level,
     lib::optional<int> default_message_notifications, lib::optional<int> explicit_content_filter,
     lib::optional<std::string> icon, lib::optional<std::vector<gateway::objects::role>> roles,
@@ -2208,10 +2208,11 @@ AEGIS_DECL aegis::future<gateway::objects::guild> core::create_guild(
         for (auto & c : channels.value())
             obj["channels"].push_back(json({ { "name", std::get<0>(c) }, { "type", std::get<1>(c) } }));
 
-    return aegis::make_ready_future(gateway::objects::guild(json::parse(get_ratelimit().post_task({ "/guilds", rest::Post, obj.dump() }).get().content)));
+    //return aegis::make_ready_future(gateway::objects::guild(json::parse(get_ratelimit().post_task({ "/guilds", rest::Post, obj.dump() }).get().content)));
+    return LSW::v5::Tools::fake_future(gateway::objects::guild(json::parse(get_ratelimit().post_task({ "/guilds", rest::Post, obj.dump() }).get().content)));
 }
 
-AEGIS_DECL aegis::future<gateway::objects::message> core::create_message(snowflake channel_id, const std::string & msg, int64_t nonce, bool perform_lookup) noexcept
+AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::message> core::create_message(snowflake channel_id, const std::string & msg, int64_t nonce, bool perform_lookup)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     channel* _channel = nullptr;
@@ -2220,12 +2221,12 @@ AEGIS_DECL aegis::future<gateway::objects::message> core::create_message(snowfla
     {
         auto it = channels.find(channel_id);
         if (it == channels.end())
-            return aegis::make_exception_future<gateway::objects::message>(error::channel_not_found);
+            throw aegis::exception(make_error_code(error::channel_not_found));//return aegis::make_exception_future<gateway::objects::message>(error::channel_not_found);// it's return already, throw will just leave this ;-;
         _channel = it->second.get();
         _guild = &it->second->get_guild();
         if (_guild != nullptr)//probably a DM
             if (!_channel->perms().can_send_messages())
-                return aegis::make_exception_future<gateway::objects::message>(error::no_permission);
+                throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future<gateway::objects::message>(error::no_permission);// it's return already, throw will just leave this ;-;
     }
 #endif
 
@@ -2238,7 +2239,7 @@ AEGIS_DECL aegis::future<gateway::objects::message> core::create_message(snowfla
     return get_ratelimit().post_task<gateway::objects::message>({ fmt::format("/channels/{}/messages", channel_id), rest::Post, obj.dump() });
 }
 
-AEGIS_DECL aegis::future<gateway::objects::message> core::create_message_embed(snowflake channel_id, const std::string& msg, const json& _obj, int64_t nonce, bool perform_lookup) noexcept
+AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::message> core::create_message_embed(snowflake channel_id, const std::string& msg, const json& _obj, int64_t nonce, bool perform_lookup)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     channel* _channel = nullptr;
@@ -2247,12 +2248,12 @@ AEGIS_DECL aegis::future<gateway::objects::message> core::create_message_embed(s
     {
         auto it = channels.find(channel_id);
         if (it == channels.end())
-            return aegis::make_exception_future<gateway::objects::message>(error::channel_not_found);
+            throw aegis::exception(make_error_code(error::channel_not_found));//return aegis::make_exception_future<gateway::objects::message>(error::channel_not_found);// it's return already, throw will just leave this ;-;
         _channel = it->second.get();
         _guild = &it->second->get_guild();
         if (_guild != nullptr)//probably a DM
             if (!_channel->perms().can_send_messages())
-                return aegis::make_exception_future<gateway::objects::message>(error::no_permission);
+                throw aegis::exception(make_error_code(error::no_permission));//return aegis::make_exception_future<gateway::objects::message>(error::no_permission);// it's return already, throw will just leave this ;-;
     }
 #endif
 

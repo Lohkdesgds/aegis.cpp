@@ -60,7 +60,7 @@ AEGIS_DECL void shard_mgr::start()
     starttime = std::chrono::steady_clock::now();
 
     int shard_start = 0;
-    int shard_end = shard_max_count;
+    uint32_t shard_end = shard_max_count;
 
     std::string cluster;
     if (_max_clusters) {
