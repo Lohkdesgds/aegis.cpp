@@ -131,20 +131,43 @@ struct create_bot_t
     create_bot_t & log_level(const spdlog::level::level_enum param) noexcept { _log_level = param; return *this; }
     create_bot_t & log_format(const std::string & param) noexcept { _log_format = param; return *this; }
     create_bot_t & io_context(std::shared_ptr<asio::io_context> param) noexcept { _io = param; return *this; }
+    /**
+     * Defines logging parameters
+     * @param param A shard pointer to a custom spdlog::logger object
+     */
     create_bot_t & logger(std::shared_ptr<spdlog::logger> param) noexcept { _log = param; return *this; }
+    /**
+     * Sets up clustering for large bots.
+     * Clustering splits the bot's shards across multiple process, where each process takes on an equal subset of the bot's shard count.
+     * For example if max_clusters is set to 2 on an 8 shard bot, then cluster_id 0 will contain shards 0, 2, 4 and 6 while cluster_id 1
+     * would contain shards 1, 3, 5 and 7. It is the responsibility of your bot to marshall information across clusters if needed, (for
+     * example using redis, SQL, etc ) as aegis will only see the shards that are part of the cluster for which it is authoritative.
+     * @param cluster_id The cluster ID of this bot, zero-based
+     * @param max_clusters The number of clusters that the bot has
+     */
+    create_bot_t & clustering(uint32_t cluster_id, uint32_t max_clusters) noexcept { _cluster_id = cluster_id; _max_clusters = max_clusters; return *this; }
     /**
      * Defines which events your bot will receive, events that you don't set here will be filtered out from the websocket at discord's side.
      * @param param A bit mask defined by one or more aegis::intents.
      * @returns reference to self
      */
     create_bot_t & intents(uint32_t param) noexcept { _intents = param; return *this; }
+    /**
+     * Sets the base name of the log file.
+     * If this is not called, the default is "aegis.log"
+     * @param log_name The name of the log to create. Will be created in a subdfolder called "log"
+     */
+    create_bot_t & log_name(const std::string &log_name) noexcept { _log_name = log_name; return *this; }
 private:
     friend aegis::core;
     std::string _token;
     uint32_t _intents{ intent::IntentsDisabled };
     uint32_t _thread_count{ std::thread::hardware_concurrency() };
     uint32_t _force_shard_count{ 0 };
+    uint32_t _cluster_id { 0 };
+    uint32_t _max_clusters { 0 };
     bool _file_logging{ false };
+    std::string _log_name { "aegis.log" };
     spdlog::level::level_enum _log_level{ spdlog::level::level_enum::info };
     std::string _log_format{ "%^%Y-%m-%d %H:%M:%S.%e [%L] [th#%t]%$ : %v" };
     std::shared_ptr<asio::io_context> _io;
@@ -379,6 +402,13 @@ public:
      */
     AEGIS_DECL user * find_user(snowflake id) const noexcept;
 
+    /// Obtain a pointer to a user by snowflake without locking - for interal user
+    /**
+     * @param id Snowflake of user to search for
+     * @returns Pointer to user or nullptr
+     */
+    AEGIS_DECL user * find_user_nolock(snowflake id) const noexcept;
+
     /// Obtain a pointer to a user by snowflake. If none exists, creates the object.
     /**
      * @param id Snowflake of user to search for
@@ -403,6 +433,13 @@ public:
      */
     AEGIS_DECL channel * find_channel(snowflake id) const noexcept;
 
+    /// Obtain a pointer to a channel by snowflake without locking - for internal use
+    /**
+     * @param id Snowflake of channel to search for
+     * @returns Pointer to channel or nullptr
+     */
+    AEGIS_DECL channel * find_channel_nolock(snowflake id) const noexcept;
+
     /// Obtain a pointer to a channel by snowflake. If none exists, creates the object.
     /**
      * @param id Snowflake of channel to search for
@@ -416,6 +453,13 @@ public:
      * @returns Pointer to guild or nullptr
      */
     AEGIS_DECL guild * find_guild(snowflake id) const noexcept;
+
+    /// Obtain a pointer to a guild by snowflake without locking - for internal use
+    /**
+     * @param id Snowflake of guild to search for
+     * @returns Pointer to guild or nullptr
+     */
+    AEGIS_DECL guild * find_guild_nolock(snowflake id) const noexcept;
 
     /// Obtain a pointer to a guild by snowflake. If none exists, creates the object.
     /**
@@ -1079,6 +1123,9 @@ private:
     // This defaults to a special-case value which causes the intents values to not be sent.
     uint32_t _intents = intent::IntentsDisabled;
 
+    uint32_t _cluster_id = 0;
+    uint32_t _max_clusters = 0;
+
     bot_status _status = bot_status::uninitialized;
 
     std::shared_ptr<rest::rest_controller> _rest;
@@ -1098,6 +1145,7 @@ private:
     bool external_io_context = true;
     std::size_t thread_count = 0;
     std::string log_formatting;
+    std::string _log_name = "aegis.log";
     bool state_valid = true;
 
 

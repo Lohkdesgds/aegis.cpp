@@ -72,7 +72,7 @@ AEGIS_DECL void core::setup_logging()
     if (file_logging)
     {
         // 5MB max filesize and 10 max log files
-        auto rotating = std::make_shared<spdlog::sinks::rotating_file_sink_mt>("log/aegis.log", 1024 * 1024 * 5, 10);
+        auto rotating = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(fmt::format("log/{}", _log_name), 1024 * 1024 * 5, 10);
         sinks.push_back(rotating);
     }
 
@@ -103,7 +103,7 @@ AEGIS_DECL void core::setup_context()
 
 AEGIS_DECL void core::setup_shard_mgr()
 {
-    _shard_mgr = std::make_shared<shards::shard_mgr>(_token, *_io_context, log);
+    _shard_mgr = std::make_shared<shards::shard_mgr>(_token, *_io_context, log, _cluster_id, _max_clusters);
 
     _rest = std::make_shared<rest::rest_controller>(_token, "/api/v6", "discord.com", &get_io_context());
 
@@ -129,7 +129,10 @@ AEGIS_DECL core::core(create_bot_t bot_config)
     file_logging = bot_config._file_logging;
     force_shard_count = bot_config._force_shard_count;
     log_formatting = bot_config._log_format;
+    _log_name = bot_config._log_name;
     _loglevel = bot_config._log_level;
+    _cluster_id = bot_config._cluster_id;
+    _max_clusters = bot_config._max_clusters;
 
     if (bot_config._log)
         log = bot_config._log;
@@ -246,6 +249,14 @@ AEGIS_DECL user * core::find_user(snowflake id) const noexcept
     return it->second.get();
 }
 
+AEGIS_DECL user* core::find_user_nolock(snowflake id) const noexcept
+{
+    auto it = users.find(id);
+    if (it == users.end())
+        return nullptr;
+    return it->second.get();
+}
+
 AEGIS_DECL user * core::user_create(snowflake id) noexcept
 {
     std::unique_lock<shared_mutex> l(_user_m);
@@ -346,6 +357,14 @@ AEGIS_DECL channel * core::find_channel(snowflake id) const noexcept
     return it->second.get();
 }
 
+AEGIS_DECL channel* core::find_channel_nolock(snowflake id) const noexcept
+{
+    auto it = channels.find(id);
+    if (it == channels.end())
+        return nullptr;
+    return it->second.get();
+}
+
 AEGIS_DECL channel * core::channel_create(snowflake id) noexcept
 {
     std::unique_lock<shared_mutex> l(_channel_m);
@@ -363,6 +382,14 @@ AEGIS_DECL channel * core::channel_create(snowflake id) noexcept
 AEGIS_DECL guild * core::find_guild(snowflake id) const noexcept
 {
     std::shared_lock<shared_mutex> l(_guild_m);
+    auto it = guilds.find(id);
+    if (it == guilds.end())
+        return nullptr;
+    return it->second.get();
+}
+
+AEGIS_DECL guild* core::find_guild_nolock(snowflake id) const noexcept
+{
     auto it = guilds.find(id);
     if (it == guilds.end())
         return nullptr;
@@ -1845,8 +1872,10 @@ AEGIS_DECL void core::ws_guild_member_remove(const json & result, shards::shard 
     snowflake member_id = result["d"]["user"]["id"];
     snowflake guild_id = result["d"]["guild_id"];
 
+    std::unique_lock<shared_mutex> l(_guild_m);
+
     auto _member = find_user(member_id);
-    auto _guild = find_guild(guild_id);
+    auto _guild = find_guild_nolock(guild_id);
 
     if (_guild != nullptr)
     {
