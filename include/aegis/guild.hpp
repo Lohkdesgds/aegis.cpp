@@ -313,12 +313,12 @@ public:
      */
     AEGIS_DECL const gateway::objects::role get_role(const int64_t r) const;
 
+#endif
     /// Get owner of guild
     /**
      * @returns Snowflake of owner
      */
     AEGIS_DECL const snowflake get_owner() const noexcept;
-#endif
 
     /// Get the snowflake of this guild
     /**
@@ -853,7 +853,6 @@ private:
     std::string name;
     std::string icon;
     std::string splash;
-    snowflake owner_id = 0;
     std::string region;
     snowflake afk_channel_id = 0;
     uint32_t afk_timeout = 0;//in seconds
@@ -869,6 +868,7 @@ private:
     //std::string m_voice_states;//this is really an array
     bool is_init = true;
 #endif
+    snowflake owner_id = 0;
     core * _bot;
     asio::io_context & _io_context;
     mutable shared_mutex _m;

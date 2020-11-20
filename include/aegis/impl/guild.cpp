@@ -140,12 +140,12 @@ AEGIS_DECL void guild::_load_role(const json & obj) noexcept
     auto & _role = roles[role_id];
     _role = obj;
 }
-
+#endif
 AEGIS_DECL const snowflake guild::get_owner() const noexcept
 {
     return owner_id;
 }
-
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
 AEGIS_DECL user * guild::find_member(snowflake member_id) const noexcept
 {
     std::shared_lock<shared_mutex> l(_m);
@@ -533,6 +533,8 @@ AEGIS_DECL void guild::_load(const json & obj, shards::shard * _shard) noexcept
     core & bot = get_bot();
     try
     {
+        if (obj.count("owner_id") && !obj["owner_id"].is_null()) owner_id = obj["owner_id"];
+
         if (obj.count("channels"))
         {
             const json& channels = obj["channels"];
