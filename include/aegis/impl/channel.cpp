@@ -148,6 +148,11 @@ AEGIS_DECL void channel::_load_with_guild(guild & _guild, const json & obj, shar
     channel_id = obj["id"];
     guild_id = _guild.get_id();
 }
+AEGIS_DECL void channel::_load_with_guild_nolock(guild & _guild, const json & obj, shards::shard * _shard)
+{
+    channel_id = obj["id"];
+    guild_id = _guild.get_id();
+}
 #endif
 
 AEGIS_DECL LSW::v5::Tools::Future<gateway::objects::message> channel::create_message(const std::string & content, int64_t nonce)

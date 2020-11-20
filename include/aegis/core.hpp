@@ -586,6 +586,7 @@ public:
 #endif
 
 #pragma region event handlers
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     using typing_start_t = std::function<void(gateway::events::typing_start obj)>;
     using message_create_t = std::function<void(gateway::events::message_create obj)>;
     using message_update_t = std::function<void(gateway::events::message_update obj)>;
@@ -619,143 +620,211 @@ public:
     using voice_state_update_t = std::function<void(gateway::events::voice_state_update obj)>;
     using voice_server_update_t = std::function<void(gateway::events::voice_server_update obj)>;
     using webhooks_update_t = std::function<void(gateway::events::webhooks_update obj)>;
-
+#endif
     using raw_event_t = std::function<void(json obj, shards::shard * _shard)>;
 
     /// TYPING_START callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_typing_start(typing_start_t cb) { i_typing_start = cb; }
+#endif
     void set_on_typing_start_raw(raw_event_t cb) { i_typing_start_raw = cb; }
 
     /// MESSAGE_CREATE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_message_create(message_create_t cb) { i_message_create = cb; }
+#endif
     void set_on_message_create_raw(raw_event_t cb) { i_message_create_raw = cb; }
 
     /// MESSAGE_CREATE callback for direct messages
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_message_create_dm(message_create_t cb) { i_message_create_dm = cb; }
+#endif
     void set_on_message_create_dm_raw(raw_event_t cb) { i_message_create_dm_raw = cb; }
 
     /// MESSAGE_UPDATE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_message_update(message_update_t cb) { i_message_update = cb; }
+#endif
     void set_on_message_update_raw(raw_event_t cb) { i_message_update_raw = cb; }
 
     /// MESSAGE_DELETE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_message_delete(message_delete_t cb) { i_message_delete = cb; }
+#endif
     void set_on_message_delete_raw(raw_event_t cb) { i_message_delete_raw = cb; }
 
     /// MESSAGE_DELETE_BULK callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_message_delete_bulk(message_delete_bulk_t cb) { i_message_delete_bulk = cb; }
+#endif
     void set_on_message_delete_bulk_raw(raw_event_t cb) { i_message_delete_bulk_raw = cb; }
 
     /// GUILD_CREATE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_guild_create(guild_create_t cb) { i_guild_create = cb; }
+#endif
     void set_on_guild_create_raw(raw_event_t cb) { i_guild_create_raw = cb; }
 
     /// GUILD_UPDATE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_guild_update(guild_update_t cb) { i_guild_update = cb; }
+#endif
     void set_on_guild_update_raw(raw_event_t cb) { i_guild_update_raw = cb; }
 
     /// GUILD_DELETE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_guild_delete(guild_delete_t cb) { i_guild_delete = cb; }
+#endif
     void set_on_guild_delete_raw(raw_event_t cb) { i_guild_delete_raw = cb; }
 
     /// MESSAGE_REACTION_ADD callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_message_reaction_add(message_reaction_add_t cb) { i_message_reaction_add = cb; }
+#endif
     void set_on_message_reaction_add_raw(raw_event_t cb) { i_message_reaction_add_raw = cb; }
 
     /// MESSAGE_REACTION_REMOVE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_message_reaction_remove(message_reaction_remove_t cb) { i_message_reaction_remove = cb; }
+#endif
     void set_on_message_reaction_remove_raw(raw_event_t cb) { i_message_reaction_remove_raw = cb; }
 
     /// MESSAGE_REACTION_REMOVE_ALL callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_message_reaction_remove_all(message_reaction_remove_all_t cb) { i_message_reaction_remove_all = cb; }
+#endif
     void set_on_message_reaction_remove_all_raw(raw_event_t cb) { i_message_reaction_remove_all_raw = cb; }
 
     /// USER_UPDATE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_user_update(user_update_t cb) { i_user_update = cb; }
+#endif
     void set_on_user_update_raw(raw_event_t cb) { i_user_update_raw = cb; }
 
     /// READY callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_ready(ready_t cb) { i_ready = cb; }
+#endif
     void set_on_ready_raw(raw_event_t cb) { i_ready_raw = cb; }
 
     /// RESUME callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_resumed(resumed_t cb) { i_resumed = cb; }
+#endif
     void set_on_resumed_raw(raw_event_t cb) { i_resumed_raw = cb; }
 
     /// CHANNEL_CREATE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_channel_create(channel_create_t cb) { i_channel_create = cb; }
+#endif
     void set_on_channel_create_raw(raw_event_t cb) { i_channel_create_raw = cb; }
 
     /// CHANNEL_UPDATE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_channel_update(channel_update_t cb) { i_channel_update = cb; }
+#endif
     void set_on_channel_update_raw(raw_event_t cb) { i_channel_update_raw = cb; }
 
     /// CHANNEL_DELETE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_channel_delete(channel_delete_t cb) { i_channel_delete = cb; }
+#endif
     void set_on_channel_delete_raw(raw_event_t cb) { i_channel_delete_raw = cb; }
 
     /// CHANNEL_PINS_UPDATE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_channel_pins_update(channel_pins_update_t cb) { i_channel_pins_update = cb; }
+#endif
     void set_on_channel_pins_update_raw(raw_event_t cb) { i_channel_pins_update_raw = cb; }
 
     /// GUILD_BAN_ADD callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_guild_ban_add(guild_ban_add_t cb) { i_guild_ban_add = cb; }
+#endif
     void set_on_guild_ban_add_raw(raw_event_t cb) { i_guild_ban_add_raw = cb; }
 
     /// GUILD_BAN_REMOVE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_guild_ban_remove(guild_ban_remove_t cb) { i_guild_ban_remove = cb; }
+#endif
     void set_on_guild_ban_remove_raw(raw_event_t cb) { i_guild_ban_remove_raw = cb; }
 
     /// GUILD_EMOJIS_UPDATE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_guild_emojis_update(guild_emojis_update_t cb) { i_guild_emojis_update = cb; }
+#endif
     void set_on_guild_emojis_update_raw(raw_event_t cb) { i_guild_emojis_update_raw = cb; }
 
     /// GUILD_INTEGRATIONS_UPDATE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_guild_integrations_update(guild_integrations_update_t cb) { i_guild_integrations_update = cb; }
+#endif
     void set_on_guild_integrations_update_raw(raw_event_t cb) { i_guild_integrations_update_raw = cb; }
 
     /// GUILD_MEMBER_ADD callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_guild_member_add(guild_member_add_t cb) { i_guild_member_add = cb; }
+#endif
     void set_on_guild_member_add_raw(raw_event_t cb) { i_guild_member_add_raw = cb; }
 
     /// GUILD_MEMBER_REMOVE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_guild_member_remove(guild_member_remove_t cb) { i_guild_member_remove = cb; }
+#endif
     void set_on_guild_member_remove_raw(raw_event_t cb) { i_guild_member_remove_raw = cb; }
 
     /// GUILD_MEMBER_UPDATE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_guild_member_update(guild_member_update_t cb) { i_guild_member_update = cb; }
+#endif
     void set_on_guild_member_update_raw(raw_event_t cb) { i_guild_member_update_raw = cb; }
 
     /// GUILD_MEMBERS_CHUNK callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_guild_member_chunk(guild_members_chunk_t cb) { i_guild_members_chunk = cb; }
+#endif
     void set_on_guild_member_chunk_raw(raw_event_t cb) { i_guild_members_chunk_raw = cb; }
 
     /// GUILD_ROLE_CREATE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_guild_role_create(guild_role_create_t cb) { i_guild_role_create = cb; }
+#endif
     void set_on_guild_role_create_raw(raw_event_t cb) { i_guild_role_create_raw = cb; }
 
     /// GUILD_ROLE_UPDATE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_guild_role_update(guild_role_update_t cb) { i_guild_role_update = cb; }
+#endif
     void set_on_guild_role_update_raw(raw_event_t cb) { i_guild_role_update_raw = cb; }
 
     /// GUILD_ROLE_DELETE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_guild_role_delete(guild_role_delete_t cb) { i_guild_role_delete = cb; }
+#endif
     void set_on_guild_role_delete_raw(raw_event_t cb) { i_guild_role_delete_raw = cb; }
 
     /// PRESENCE_UPDATE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_presence_update(presence_update_t cb) { i_presence_update = cb; }
+#endif
     void set_on_presence_update_raw(raw_event_t cb) { i_presence_update_raw = cb; }
 
     /// VOICE_STATE_UPDATE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_voice_state_update(voice_state_update_t cb) { i_voice_state_update = cb; }
+#endif
     void set_on_voice_state_update_raw(raw_event_t cb) { i_voice_state_update_raw = cb; }
 
     /// VOICE_SERVER_UPDATE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_voice_server_update(voice_server_update_t cb) { i_voice_server_update = cb; }
+#endif
     void set_on_voice_server_update_raw(raw_event_t cb) { i_voice_server_update_raw = cb; }
 
     /// WEBHOOKS_UPDATE callback
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     void set_on_webhooks_update(webhooks_update_t cb) { i_webhooks_update = cb; }
+#endif
     void set_on_webhooks_update_raw(raw_event_t cb) { i_webhooks_update_raw = cb; }
 
     /// Shard disconnect callback
@@ -992,6 +1061,7 @@ private:
     AEGIS_DECL void _thread_track(thread_state * t_state);
 
 #pragma region event handlers
+#if !defined(AEGIS_DISABLE_ALL_CACHE)
     //preprocessed object events
     typing_start_t i_typing_start;
     message_create_t i_message_create;
@@ -1027,6 +1097,7 @@ private:
     voice_state_update_t i_voice_state_update;
     voice_server_update_t i_voice_server_update;
     webhooks_update_t i_webhooks_update;
+#endif
 
     //raw json events
     raw_event_t i_typing_start_raw;

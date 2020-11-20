@@ -9,13 +9,13 @@
 
 #pragma once
 
+#include "aegis/core.hpp"
 #include "aegis/config.hpp"
 #include "aegis/rest/rest_controller.hpp"
 #include "aegis/snowflake.hpp"
 #include "aegis/ratelimit/bucket.hpp"
 #include "lsw/future_mod.h"
 //#include "aegis/futures.hpp"
-#include "aegis/core.hpp"
 
 #include <chrono>
 #include <functional>

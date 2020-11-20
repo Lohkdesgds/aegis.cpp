@@ -367,7 +367,7 @@ AEGIS_DECL int32_t guild::get_member_count() const noexcept
     return static_cast<int32_t>(members.size());
 }
 
-AEGIS_DECL void guild::_load(const json & obj, shards::shard * _shard)
+AEGIS_DECL void guild::_load(const json & obj, shards::shard * _shard) noexcept
 {
     std::unique_lock<shared_mutex> l(_m);
     //uint64_t application_id = obj->get("application_id").convert<uint64_t>();
@@ -535,9 +535,9 @@ AEGIS_DECL void guild::_load(const json & obj, shards::shard * _shard) noexcept
     {
         if (obj.count("channels"))
         {
-            const json & channels = obj["channels"];
+            const json& channels = obj["channels"];
 
-            for (auto & channel_obj : channels)
+            for (auto& channel_obj : channels)
             {
                 snowflake channel_id = channel_obj["id"];
                 auto _channel = bot.channel_create(channel_id);
