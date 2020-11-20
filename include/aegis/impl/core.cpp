@@ -1271,24 +1271,6 @@ AEGIS_DECL void core::ws_typing_start(const json & result, shards::shard * _shar
 
     if (i_typing_start)
         i_typing_start(obj);
-#else
-    /*aegis::snowflake channel_id = result["d"]["channel_id"];
-    auto* _channel = channel_create(channel_id);
-    if (!_channel->guild_id &&  result["d"].count("guild_id") && !result["d"]["guild_id"].is_null()) {
-        aegis::snowflake guild_id = result["d"]["guild_id"];
-        auto _guild = find_guild(guild_id);
-        if (_guild == nullptr)//TODO: errors
-            return;
-        std::unique_lock<shared_mutex> l(_channel->mtx(), std::defer_lock);
-        std::unique_lock<shared_mutex> l2(_channel_m, std::defer_lock);
-        std::unique_lock<shared_mutex> l3(_guild->mtx(), std::defer_lock);
-        std::lock(l, l2, l3);
-        _channel->_load_with_guild_nolock(*_guild, result["d"], _shard);
-        _guild->channels.emplace(channel_id, _channel);
-        _channel->guild_id = guild_id;
-        _channel->_guild = _guild;
-    }*/
-    //user_create(result["d"]["user_id"]);
 #endif
     if (i_typing_start_raw)
         i_typing_start_raw(result, _shard);
@@ -1403,23 +1385,6 @@ AEGIS_DECL void core::ws_message_update(const json & result, shards::shard * _sh
 
     if (i_message_update)
         i_message_update(obj);
-#else
-    /*aegis::snowflake channel_id = result["d"]["channel_id"];
-    auto* _channel = channel_create(channel_id);
-    if (!_channel->guild_id && result["d"].count("guild_id") && !result["d"]["guild_id"].is_null()) {
-        aegis::snowflake guild_id = result["d"]["guild_id"];
-        auto _guild = find_guild(guild_id);
-        if (_guild == nullptr)//TODO: errors
-            return;
-        std::unique_lock<shared_mutex> l(_channel->mtx(), std::defer_lock);
-        std::unique_lock<shared_mutex> l2(_channel_m, std::defer_lock);
-        std::unique_lock<shared_mutex> l3(_guild->mtx(), std::defer_lock);
-        std::lock(l, l2, l3);
-        _channel->_load_with_guild_nolock(*_guild, result["d"], _shard);
-        _guild->channels.emplace(channel_id, _channel);
-        _channel->guild_id = guild_id;
-        _channel->_guild = _guild;
-    }*/
 #endif
     if (i_message_update_raw)
         i_message_update_raw(result, _shard);
@@ -1539,23 +1504,6 @@ AEGIS_DECL void core::ws_message_delete(const json & result, shards::shard * _sh
 
     if (i_message_delete)
         i_message_delete(obj);
-#else
-    /*aegis::snowflake channel_id = result["d"]["channel_id"];
-    auto* _channel = channel_create(channel_id);
-    if (!_channel->guild_id && result["d"].count("guild_id") && !result["d"]["guild_id"].is_null()) {
-        aegis::snowflake guild_id = result["d"]["guild_id"];
-        auto _guild = find_guild(guild_id);
-        if (_guild == nullptr)//TODO: errors
-            return;
-        std::unique_lock<shared_mutex> l(_channel->mtx(), std::defer_lock);
-        std::unique_lock<shared_mutex> l2(_channel_m, std::defer_lock);
-        std::unique_lock<shared_mutex> l3(_guild->mtx(), std::defer_lock);
-        std::lock(l, l2, l3);
-        _channel->_load_with_guild_nolock(*_guild, result["d"], _shard);
-        _guild->channels.emplace(channel_id, _channel);
-        _channel->guild_id = guild_id;
-        _channel->_guild = _guild;
-    }*/
 #endif
     if (i_message_delete_raw)
         i_message_delete_raw(result, _shard);
@@ -1912,12 +1860,12 @@ AEGIS_DECL void core::ws_guild_member_add(const json & result, shards::shard * _
 
     auto _member = user_create(member_id);
     auto _guild = find_guild(guild_id);
-
-    std::unique_lock<shared_mutex> l(_member->mtx(), std::defer_lock);
-    std::unique_lock<shared_mutex> l2(_guild->mtx(), std::defer_lock);
-    std::lock(l, l2);
-    _member->_load_nolock(_guild, result["d"], _shard, true, false);
-
+    {
+        std::unique_lock<shared_mutex> l(_member->mtx(), std::defer_lock);
+        std::unique_lock<shared_mutex> l2(_guild->mtx(), std::defer_lock);
+        std::lock(l, l2);
+        _member->_load_nolock(_guild, result["d"], _shard, true, false);
+    }
     gateway::events::guild_member_add obj{ *_shard };
 
     const json & j = result["d"];
@@ -1936,18 +1884,18 @@ AEGIS_DECL void core::ws_guild_member_remove(const json & result, shards::shard 
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     snowflake member_id = result["d"]["user"]["id"];
     snowflake guild_id = result["d"]["guild_id"];
-
-    std::unique_lock<shared_mutex> l(_guild_m);
-
-    auto _member = find_user(member_id);
-    auto _guild = find_guild_nolock(guild_id);
-
-    if (_guild != nullptr)
     {
-        //if user was self, guild may already be deleted
-        _guild->_remove_member(member_id);
-    }
+        std::unique_lock<shared_mutex> l(_guild_m);
 
+        auto _member = find_user(member_id);
+        auto _guild = find_guild_nolock(guild_id);
+
+        if (_guild != nullptr)
+        {
+            //if user was self, guild may already be deleted
+            _guild->_remove_member(member_id);
+        }
+    }
     gateway::events::guild_member_remove obj{ *_shard };
 
     const json & j = result["d"];
@@ -1998,10 +1946,12 @@ AEGIS_DECL void core::ws_guild_member_update(const json & result, shards::shard 
         return;
     }
 
-    std::unique_lock<shared_mutex> l(_member->mtx(), std::defer_lock);
-    std::unique_lock<shared_mutex> l2(_guild->mtx(), std::defer_lock);
-    std::lock(l2, l);
-    _member->_load_nolock(_guild, result["d"], _shard, true, false);
+    {
+        std::unique_lock<shared_mutex> l(_member->mtx(), std::defer_lock);
+        std::unique_lock<shared_mutex> l2(_guild->mtx(), std::defer_lock);
+        std::lock(l2, l);
+        _member->_load_nolock(_guild, result["d"], _shard, true, false);
+    }
 
     gateway::events::guild_member_update obj{ *_shard };
 
