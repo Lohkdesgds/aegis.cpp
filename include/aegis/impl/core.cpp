@@ -1954,7 +1954,6 @@ AEGIS_DECL void core::ws_guild_member_update(const json & result, shards::shard 
         std::lock(l, l2);
         _member->_load_nolock(_guild, result["d"], _shard, true, false);
     }
-#endif
 
     gateway::events::guild_member_update obj{ *_shard };
 
