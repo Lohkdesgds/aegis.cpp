@@ -45,7 +45,7 @@ AEGIS_DECL void user::_load_nolock(guild * _guild, const json & obj, shards::sha
         if (user.count("avatar") && !user["avatar"].is_null()) _avatar = user["avatar"].get<std::string>();
         if (user.count("discriminator") && !user["discriminator"].is_null()) _discriminator = static_cast<uint16_t>(std::stoi(user["discriminator"].get<std::string>()));
         if (user.count("bot"))
-            _is_bot = user["bot"].is_null() ? false : true;
+            _is_bot = user["bot"].is_null() ? false : user["bot"].get<bool>();
 
         if (_guild == nullptr)
             return;
