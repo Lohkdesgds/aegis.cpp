@@ -434,7 +434,7 @@ AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> channel::delete_channel()
 	return _ratelimit.post_task({ _endpoint, rest::Delete });
 }
 
-AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> channel::create_reaction(snowflake message_id, const std::string & emoji_text)
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> channel::create_reaction(snowflake message_id, const std::string & emoji_text, const bool auto_encode)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (_guild && !perms().can_add_reactions())
@@ -443,13 +443,13 @@ AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> channel::create_reaction(sno
 
     std::shared_lock<shared_mutex> l(_m);
 
-    std::string _endpoint = fmt::format("/channels/{}/messages/{}/reactions/{}/@me", channel_id, message_id, utility::url_encode(emoji_text));
+    std::string _endpoint = fmt::format("/channels/{}/messages/{}/reactions/{}/@me", channel_id, message_id, auto_encode ? utility::url_encode(emoji_text) : emoji_text);
     std::string _bucket = fmt::format("/guilds/{}/reactions", guild_id);
 	_ratelimit.get_bucket(_bucket).reset_bypass = 250;
     return _ratelimit.post_task(_bucket, { _endpoint, rest::Put });
 }
 
-AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> channel::delete_own_reaction(snowflake message_id, const std::string & emoji_text)
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> channel::delete_own_reaction(snowflake message_id, const std::string & emoji_text, const bool auto_encode)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (_guild && !perms().can_add_reactions())
@@ -458,13 +458,13 @@ AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> channel::delete_own_reaction
 
     std::shared_lock<shared_mutex> l(_m);
 
-    std::string _endpoint = fmt::format("/channels/{}/messages/{}/reactions/{}/@me", channel_id, message_id, utility::url_encode(emoji_text));
+    std::string _endpoint = fmt::format("/channels/{}/messages/{}/reactions/{}/@me", channel_id, message_id, auto_encode ? utility::url_encode(emoji_text) : emoji_text);
     std::string _bucket = fmt::format("/guilds/{}/reactions", guild_id);
 	_ratelimit.get_bucket(_bucket).reset_bypass = 250;
     return _ratelimit.post_task(_bucket, { _endpoint, rest::Delete });
 }
 
-AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> channel::delete_user_reaction(snowflake message_id, const std::string & emoji_text, snowflake member_id)
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> channel::delete_user_reaction(snowflake message_id, const std::string & emoji_text, snowflake member_id, const bool auto_encode)
 {
 #if !defined(AEGIS_DISABLE_ALL_CACHE)
     if (!_guild) throw aegis::exception(make_error_code(error::guild_error));//return aegis::make_exception_future(error::guild_error);
@@ -474,7 +474,7 @@ AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> channel::delete_user_reactio
 
     std::shared_lock<shared_mutex> l(_m);
 
-    std::string _endpoint = fmt::format("/channels/{}/messages/{}/reactions/{}/{}", channel_id, message_id, utility::url_encode(emoji_text), member_id);
+    std::string _endpoint = fmt::format("/channels/{}/messages/{}/reactions/{}/{}", channel_id, message_id, auto_encode ? utility::url_encode(emoji_text) : emoji_text, member_id);
 	std::string _bucket = fmt::format("/channels/{}/messages/_/reactions/", channel_id);
 	return _ratelimit.post_task(_bucket, { _endpoint, rest::Delete });
 }

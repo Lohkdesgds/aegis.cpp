@@ -93,14 +93,14 @@ AEGIS_DECL LSW::v5::Tools::Future<message> message::edit(edit_message_t & obj)
     return get_channel().edit_message(obj.message_id(_message_id));
 }
 
-AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> message::create_reaction(const std::string & content)
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> message::create_reaction(const std::string & content, const bool auto_encode)
 {
     populate_self();
     assert(_channel != nullptr);
     if (_channel == nullptr)
         throw aegis::exception(make_error_code(error::channel_error));//return aegis::make_exception_future<rest::rest_reply>(std::make_exception_ptr(aegis::exception(make_error_code(error::channel_error))));
 
-    return get_channel().create_reaction(_message_id, content);
+    return get_channel().create_reaction(_message_id, content, auto_encode);
 }
 
 AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> message::delete_own_reaction(const std::string & content)
@@ -113,14 +113,14 @@ AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> message::delete_own_reaction
     return get_channel().delete_own_reaction(_message_id, content);
 }
 
-AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> message::delete_user_reaction(const std::string & content, const snowflake member_id)
+AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> message::delete_user_reaction(const std::string & content, const snowflake member_id, const bool auto_encode)
 {
     populate_self();
     assert(_channel != nullptr);
     if (_channel == nullptr)
         throw aegis::exception(make_error_code(error::channel_error));//return aegis::make_exception_future<rest::rest_reply>(std::make_exception_ptr(aegis::exception(make_error_code(error::channel_error))));
 
-    return get_channel().delete_user_reaction(_message_id, content, member_id);
+    return get_channel().delete_user_reaction(_message_id, content, member_id, auto_encode);
 }
 
 AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> message::delete_all_reactions()

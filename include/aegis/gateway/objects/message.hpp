@@ -325,7 +325,7 @@ public:
      * @param content String of the emoji to add. Unicode emoji or `emojiname:emoji_id`
      * @returns LSW::v5::Tools::Future<rest::rest_reply>
      */
-    AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> create_reaction(const std::string & content);
+    AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> create_reaction(const std::string & content, const bool auto_encode = true);
 
     /// Delete your reaction to this message
     /**
@@ -340,7 +340,7 @@ public:
      * @param member_id Snowflake of the member to delete the reaction for
      * @returns LSW::v5::Tools::Future<rest::rest_reply>
      */
-    AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> delete_user_reaction(const std::string & content, const snowflake member_id);
+    AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> delete_user_reaction(const std::string & content, const snowflake member_id, const bool auto_encode = true);
 
     /// Delete all reactions on this message (not available for DMs)
     /**

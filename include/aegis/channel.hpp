@@ -431,7 +431,7 @@ public:
      * @param emoji_text Text of emoji being added `name:snowflake`
      * @returns LSW::v5::Tools::Future<rest::rest_reply>
      */
-    AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> create_reaction(snowflake message_id, const std::string & emoji_text);
+    AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> create_reaction(snowflake message_id, const std::string & emoji_text, const bool auto_encode = true);
 
     /// Add new reaction on message
     /**
@@ -450,7 +450,7 @@ public:
      * @param emoji_text Text of emoji being added `name:snowflake`
      * @returns LSW::v5::Tools::Future<rest::rest_reply>
      */
-    AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> delete_own_reaction(snowflake message_id, const std::string & emoji_text);
+    AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> delete_own_reaction(snowflake message_id, const std::string & emoji_text, const bool auto_encode = true);
 
     /// Delete own reaction on message
     /**
@@ -470,7 +470,7 @@ public:
      * @param member_id Snowflake of member to remove emoji from
      * @returns LSW::v5::Tools::Future<rest::rest_reply>
      */
-    AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> delete_user_reaction(snowflake message_id, const std::string & emoji_text, snowflake member_id);
+    AEGIS_DECL LSW::v5::Tools::Future<rest::rest_reply> delete_user_reaction(snowflake message_id, const std::string & emoji_text, snowflake member_id, const bool auto_encode = true);
 
     /// Delete specified member reaction on message
     /**
